@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>5 Min Trade Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #059669;
+            --error: #dc2626;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #ffffff;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100dvh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #bgCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.4;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 320px;
+            z-index: 10;
+            position: relative;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1rem;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        header h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center-aligns the labels */
+        }
+
+        label {
+            display: block;
+            font-size: 0.6rem;
+            font-weight: 800;
+            margin-bottom: 3px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            text-align: center; /* Ensures text inside label is centered */
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 700;
+            outline: none;
+            background: #f8fafc;
+            color: var(--text-main);
+            text-align: center; /* Centers the typed numbers */
+        }
+
+        input:focus { 
+            border-color: var(--primary);
+            background: #fff;
+        }
+
+        .btn-calc {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 900;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        #results {
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+            text-align: center;
+        }
+
+        .target-hero {
+            background: #f1f5f9;
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .target-title {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        #requiredVal {
+            font-size: 3.5rem;
+            font-weight: 900;
+            line-height: 1;
+            color: var(--text-main);
+        }
+
+        .target-subtext {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-weight: 700;
+        }
+
+        .ratio-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2px;
+        }
+
+        .result-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        #percentVal {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--text-main);
+        }
+
+        #statusBadge {
+            font-size: 0.55rem;
+            font-weight: 900;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .status-met { background: #dcfce7; color: var(--success); border: 1px solid var(--success); }
+        .status-below { background: #fee2e2; color: var(--error); border: 1px solid var(--error); }
+
+        .text-success { color: var(--success) !important; }
+        .text-error { color: var(--error) !important; }
+    </style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="container">
+    <div class="card">
+        <header>
+            <h1>5 MIN CALCULATOR</h1>
+        </header>
+
+        <div class="input-row">
+            <div class="form-group">
+                <label>Total Trades</label>
+                <input type="number" id="totalTrades" inputmode="numeric" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label>≥ 5 Min</label>
+                <input type="number" id="minTrades" inputmode="numeric" placeholder="0">
+            </div>
+        </div>
+
+        <button id="calculateBtn" class="btn-calc">Calculate Target</button>
+
+        <div id="results">
+            <div class="target-hero">
+                <div class="target-title">Required for 51%</div>
+                <div id="requiredVal">0</div>
+                <div class="target-subtext">Additional trades needed</div>
+            </div>
+
+            <div class="ratio-footer">
+                <div>
+                    <span class="result-label">Ratio: </span>
+                    <span id="percentVal">0%</span>
+                </div>
+                <div id="statusBadge" class="status-badge">Awaiting</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('bgCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let candles = [];
+    const candleWidth = 8;
+    const spacing = 6;
+
+    function initCanvas() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+        candles = [];
+        let x = width;
+        let lastClose = height / 2;
+        while (x > -candleWidth * 2) {
+            const open = lastClose;
+            const close = open + (Math.random() - 0.5) * 60;
+            const high = Math.max(open, close) + Math.random() * 15;
+            const low = Math.min(open, close) - Math.random() * 15;
+            candles.push({ x, open, close, high, low });
+            lastClose = close;
+            x -= (candleWidth + spacing);
+        }
+    }
+
+    function drawBackground() {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        
+        ctx.strokeStyle = 'rgba(0,0,0,0.04)';
+        for(let i=0; i<width; i+=50) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,height); ctx.stroke(); }
+        for(let j=0; j<height; j+=50) { ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(width,j); ctx.stroke(); }
+
+        candles.forEach(c => {
+            const isUp = c.close < c.open;
+            ctx.strokeStyle = isUp ? 'rgba(5, 150, 105, 0.2)' : 'rgba(220, 38, 38, 0.2)';
+            ctx.fillStyle = isUp ? 'rgba(5, 150, 105, 0.1)' : 'rgba(220, 38, 38, 0.1)';
+            
+            ctx.beginPath();
+            ctx.moveTo(c.x + candleWidth/2, c.high);
+            ctx.lineTo(c.x + candleWidth/2, c.low);
+            ctx.stroke();
+            
+            ctx.fillRect(c.x, Math.min(c.open, c.close), candleWidth, Math.max(Math.abs(c.open - c.close), 1));
+            c.x -= 0.4;
+        });
+
+        if (candles[0] && candles[0].x < -candleWidth) {
+            const last = candles[candles.length - 1];
+            const open = last.close;
+            const close = open + (Math.random() - 0.5) * 60;
+            candles.shift();
+            candles.push({
+                x: last.x + candleWidth + spacing,
+                open, close,
+                high: Math.max(open, close) + Math.random() * 15,
+                low: Math.min(open, close) - Math.random() * 15
+            });
+        }
+        requestAnimationFrame(drawBackground);
+    }
+
+    window.addEventListener('resize', initCanvas);
+    initCanvas();
+    drawBackground();
+
+    const totalIn = document.getElementById('totalTrades');
+    const minIn = document.getElementById('minTrades');
+
+    document.getElementById('calculateBtn').onclick = () => {
+        const T = parseInt(totalIn.value) || 0;
+        const F = parseInt(minIn.value) || 0;
+        if(T > 0) {
+            const perc = (F/T) * 100;
+            const met = perc >= 51;
+            const req = Math.max(0, Math.ceil((0.51 * T - F) / 0.49));
+            
+            const valEl = document.getElementById('percentVal');
+            valEl.textContent = Math.floor(perc) + '%';
+            valEl.className = met ? 'text-success' : 'text-error';
+            
+            const badge = document.getElementById('statusBadge');
+            badge.textContent = met ? 'PASSED' : 'BELOW 51%';
+            badge.className = 'status-badge ' + (met ? 'status-met' : 'status-below');
+            
+            const reqEl = document.getElementById('requiredVal');
+            reqEl.textContent = req;
+            reqEl.className = req === 0 ? 'text-success' : '';
+        }
+    };
+</script>
+</body>
+</html>
